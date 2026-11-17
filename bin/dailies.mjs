@@ -192,8 +192,16 @@ const capture = (opts) => {
     try {
       const c = await getCdp();
       const rect = await c.evaluate(`window.__dailies.prepareCapture(${JSON.stringify({ composition, frame, clean: !!clean })})`);
-      const shot = await c.send("Page.captureScreenshot", {
-        format: "png", clip: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, scale: width / rect.width },
+      // Never ask Chrome for more than the window shows (scale <= 1; Retina still gives 2x pixels). A larger capture makes Chrome
+      // re-lay the page for a moment and, for tall vertical films, can hang it. A minimized window can't paint, so time out.
+      const shot = await Promise.race([
+        c.send("Page.captureScreenshot", {
+          format: "png", clip: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, scale: Math.min(1, width / rect.width) },
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("The frame picture timed out. Is the Dailies window minimized or hidden?")), 20000)),
+      ]).catch(async (e) => {
+        await c.evaluate("window.__dailies.finishCapture()").catch(() => {});
+        throw e;
       });
       await c.evaluate("window.__dailies.finishCapture()");
       writeFileSync(file, Buffer.from(shot.data, "base64"));
