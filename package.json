@@ -1,0 +1,16 @@
+{
+  "name": "dailies",
+  "version": "0.1.0",
+  "description": "Review your Remotion film straight from code, frame by frame. Circle what's wrong; Claude gets the note. No render.",
+  "type": "module",
+  "bin": {
+    "dailies": "bin/dailies.mjs",
+    "dailies-mcp": "bin/mcp.mjs"
+  },
+  "files": ["bin", "lib", "client", "README.md", "LICENSE"],
+  "keywords": ["remotion", "claude", "claude-code", "mcp", "video", "review"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  }
+}
